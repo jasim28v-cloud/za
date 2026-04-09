@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>تسجيل الدخول | MOKA</title>
+    <meta name="theme-color" content="#ff4757">
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Rubik', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            direction: rtl;
+            padding: 20px;
+        }
+        
+        body.dark-mode {
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .auth-container {
+            max-width: 480px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            border-radius: 32px;
+            box-shadow: 20px 20px 40px rgba(0, 0, 0, 0.1), -20px -20px 40px rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        body.dark-mode .auth-container {
+            background: rgba(25, 25, 40, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 20px 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .auth-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 32px 24px 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        body.dark-mode .auth-header {
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .logo {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+        
+        .auth-main {
+            padding: 28px 24px 36px;
+        }
+        
+        .auth-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 28px;
+            text-align: center;
+            color: #1a1a2e;
+        }
+        
+        body.dark-mode .auth-title {
+            color: #e0e0e0;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .auth-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 16px 20px;
+            font-size: 16px;
+            font-family: 'Rubik', sans-serif;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        
+        body.dark-mode .auth-input {
+            background: #2a2a3a;
+            border-color: #3a3a4a;
+            color: #e0e0e0;
+        }
+        
+        .auth-input:focus {
+            border-color: #ff4757;
+            box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.1);
+        }
+        
+        .auth-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .primary-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
+            border: none;
+            border-radius: 16px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+            font-family: 'Rubik', sans-serif;
+        }
+        
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(255, 71, 87, 0.4);
+        }
+        
+        .primary-btn:active {
+            transform: translateY(0);
+        }
+        
+        .error-msg {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 12px;
+            text-align: center;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 10px;
+            border-radius: 12px;
+        }
+        
+        .auth-footer {
+            text-align: center;
+            padding: 20px 24px 28px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        body.dark-mode .auth-footer {
+            border-top-color: rgba(255, 255, 255, 0.05);
+            color: #9ca3af;
+        }
+        
+        .auth-footer a {
+            color: #ff4757;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .auth-form {
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+            animation: fadeInUp 0.3s ease-out;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            margin-left: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .theme-toggle-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            color: #ff4757;
+            transition: all 0.2s;
+            z-index: 100;
+        }
+        
+        .theme-toggle-btn:hover {
+            transform: scale(1.05);
+            background: rgba(255, 71, 87, 0.2);
+        }
+        
+        body.dark-mode .theme-toggle-btn {
+            background: rgba(0, 0, 0, 0.3);
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body>
+
+<button class="theme-toggle-btn" onclick="toggleAuthTheme()" id="authThemeToggle">
+    <i class="fa-solid fa-moon"></i>
+</button>
+
+<div class="auth-container">
+    <div class="auth-header">
+        <div class="logo">🔥 MOKA 🔥</div>
+    </div>
+    
+    <div class="auth-main">
+        <!-- Login Form -->
+        <div id="loginForm" class="auth-form active">
+            <h2 class="auth-title">سجّل الدخول</h2>
+            <div class="input-group">
+                <input type="email" id="loginEmail" class="auth-input" placeholder="البريد الإلكتروني" autocomplete="email">
+            </div>
+            <div class="input-group">
+                <input type="password" id="loginPassword" class="auth-input" placeholder="كلمة المرور" autocomplete="current-password">
+            </div>
+            <button class="primary-btn" onclick="handleLogin()" id="loginBtn">🚀 تسجيل الدخول</button>
+            <div id="loginMsg" class="error-msg"></div>
+        </div>
+        
+        <!-- Register Form -->
+        <div id="registerForm" class="auth-form">
+            <h2 class="auth-title">إنشاء حساب</h2>
+            <div class="input-group">
+                <input type="text" id="regName" class="auth-input" placeholder="اسم المستخدم" autocomplete="name">
+            </div>
+            <div class="input-group">
+                <input type="email" id="regEmail" class="auth-input" placeholder="البريد الإلكتروني" autocomplete="email">
+            </div>
+            <div class="input-group">
+                <input type="password" id="regPass" class="auth-input" placeholder="كلمة المرور" autocomplete="new-password">
+            </div>
+            <div class="input-group">
+                <input type="password" id="regConfirmPass" class="auth-input" placeholder="تأكيد كلمة المرور" autocomplete="off">
+            </div>
+            <button class="primary-btn" onclick="handleRegister()" id="registerBtn">✨ إنشاء حساب</button>
+            <div id="regMsg" class="error-msg"></div>
+        </div>
+    </div>
+    
+    <div class="auth-footer">
+        <span id="footerText">ليس لديك حساب؟</span>
+        <a id="toggleLink" onclick="switchAuth('register')">إنشاء حساب جديد</a>
+    </div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script>
+    // ==================== MOKA Auth Page Script ====================
+    
+    function switchAuth(form) {
+        document.getElementById('loginForm').classList.remove('active');
+        document.getElementById('registerForm').classList.remove('active');
+        document.getElementById(`${form}Form`).classList.add('active');
+        
+        const footerText = document.getElementById('footerText');
+        const toggleLink = document.getElementById('toggleLink');
+        
+        if (form === 'login') {
+            footerText.textContent = 'ليس لديك حساب؟';
+            toggleLink.textContent = 'إنشاء حساب جديد';
+            toggleLink.setAttribute('onclick', "switchAuth('register')");
+        } else {
+            footerText.textContent = 'لديك حساب بالفعل؟';
+            toggleLink.textContent = 'تسجيل الدخول';
+            toggleLink.setAttribute('onclick', "switchAuth('login')");
+        }
+    }
+    
+    function showLoading(btnId, isLoading) {
+        const btn = document.getElementById(btnId);
+        if (isLoading) {
+            btn.innerHTML = '<span class="spinner"></span> جاري...';
+            btn.classList.add('btn-loading');
+            btn.disabled = true;
+        } else {
+            if (btnId === 'loginBtn') btn.innerHTML = '🚀 تسجيل الدخول';
+            else btn.innerHTML = '✨ إنشاء حساب';
+            btn.classList.remove('btn-loading');
+            btn.disabled = false;
+        }
+    }
+    
+    function showError(elementId, message) {
+        const msgDiv = document.getElementById(elementId);
+        msgDiv.textContent = message;
+        setTimeout(() => {
+            if (msgDiv) msgDiv.textContent = '';
+        }, 4000);
+    }
+    
+    function toggleAuthTheme() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        const themeIcon = document.getElementById('authThemeToggle').querySelector('i');
+        if (isDark) {
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        } else {
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-moon');
+        }
+        localStorage.setItem('authTheme', isDark ? 'dark' : 'light');
+    }
+    
+    // Load saved theme
+    const savedAuthTheme = localStorage.getItem('authTheme');
+    if (savedAuthTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        const themeIcon = document.getElementById('authThemeToggle').querySelector('i');
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+    }
+    
+    async function handleLogin() {
+        const email = document.getElementById('loginEmail')?.value;
+        const password = document.getElementById('loginPassword')?.value;
+        
+        if (!email || !password) {
+            showError('loginMsg', '⚠️ الرجاء إدخال البريد الإلكتروني وكلمة المرور');
+            return;
+        }
+        
+        showLoading('loginBtn', true);
+        
+        try {
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            const snapshot = await db.ref(`users/${user.uid}`).once('value');
+            if (!snapshot.exists()) {
+                await db.ref(`users/${user.uid}`).set({
+                    uid: user.uid,
+                    name: user.displayName || email.split('@')[0],
+                    email: email,
+                    bio: "مرحباً! أنا في MOKA 🔥",
+                    avatar: "",
+                    cover: "",
+                    website: "",
+                    verified: false,
+                    isAdmin: email === ADMIN_EMAIL,
+                    blockedUsers: {},
+                    mutedUntil: 0,
+                    createdAt: Date.now()
+                });
+            }
+            
+            if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+                await db.ref(`users/${user.uid}`).update({ isAdmin: true, verified: true, name: 'MOKA Admin' });
+            }
+            
+            localStorage.setItem('auth_logged_in', 'true');
+            localStorage.setItem('auth_user_email', email);
+            
+            showLoading('loginBtn', false);
+            window.location.href = 'index.html';
+            
+        } catch (error) {
+            showLoading('loginBtn', false);
+            let errorMsg = '❌ فشل تسجيل الدخول: ';
+            switch (error.code) {
+                case 'auth/user-not-found': errorMsg += 'لا يوجد حساب بهذا البريد الإلكتروني'; break;
+                case 'auth/wrong-password': errorMsg += 'كلمة المرور غير صحيحة'; break;
+                case 'auth/invalid-email': errorMsg += 'صيغة البريد الإلكتروني غير صالحة'; break;
+                case 'auth/too-many-requests': errorMsg += 'تم تعطيل الحساب مؤقتاً. حاول لاحقاً'; break;
+                default: errorMsg += error.message;
+            }
+            showError('loginMsg', errorMsg);
+        }
+    }
+    
+    async function handleRegister() {
+        const name = document.getElementById('regName')?.value;
+        const email = document.getElementById('regEmail')?.value;
+        const password = document.getElementById('regPass')?.value;
+        const confirmPass = document.getElementById('regConfirmPass')?.value;
+        
+        if (!name || !email || !password) {
+            showError('regMsg', '⚠️ الرجاء ملء جميع الحقول');
+            return;
+        }
+        
+        if (password !== confirmPass) {
+            showError('regMsg', '⚠️ كلمة المرور غير متطابقة');
+            return;
+        }
+        
+        if (password.length < 6) {
+            showError('regMsg', '⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+            return;
+        }
+        
+        showLoading('registerBtn', true);
+        
+        try {
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            await userCredential.user.updateProfile({ displayName: name });
+            
+            await db.ref(`users/${userCredential.user.uid}`).set({
+                uid: userCredential.user.uid,
+                name: name,
+                email: email,
+                bio: "مرحباً! أنا في MOKA 🔥",
+                avatar: "",
+                cover: "",
+                website: "",
+                verified: false,
+                isAdmin: email === ADMIN_EMAIL,
+                blockedUsers: {},
+                mutedUntil: 0,
+                createdAt: Date.now()
+            });
+            
+            localStorage.setItem('auth_logged_in', 'true');
+            localStorage.setItem('auth_user_email', email);
+            
+            showLoading('registerBtn', false);
+            window.location.href = 'index.html';
+            
+        } catch (error) {
+            showLoading('registerBtn', false);
+            let errorMsg = '❌ فشل إنشاء الحساب: ';
+            switch (error.code) {
+                case 'auth/email-already-in-use': errorMsg += 'البريد الإلكتروني مستخدم بالفعل'; break;
+                case 'auth/invalid-email': errorMsg += 'صيغة البريد الإلكتروني غير صالحة'; break;
+                case 'auth/weak-password': errorMsg += 'كلمة المرور ضعيفة جداً'; break;
+                default: errorMsg += error.message;
+            }
+            showError('regMsg', errorMsg);
+        }
+    }
+    
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            window.location.href = 'index.html';
+        }
+    });
+</script>
+
+</body>
+</html>
